@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="60">
+    <meta http-equiv="Content-Type" content="text/html">
+    <title>Endpoint Page</title>
+    <script src="/js/script.js" rel="script" type="text/javascript" defer></script>
+    <link href="/css/style.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Value</th>
+        </tr>
+    </thead>
+    <tbody>
+    {{ range $k, $v := . }}
+    <tr>
+        <td>{{ $k }}</td>
+        <td>{{ $v }}</td>
+    </tr>
+    {{ end }}
+    </tbody>
+</table>
+{{ .JsonTable }}
+</body>
+</html>
