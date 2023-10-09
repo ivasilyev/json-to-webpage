@@ -1,0 +1,55 @@
+# deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "my-webserver-chart.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "my-webserver-chart.name" . }}
+    helm.sh/chart: {{ include "my-webserver-chart.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "my-webserver-chart.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "my-webserver-chart.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          ports:
+            - name: http
+              containerPort: {{ .Values.port }}
+          volumeMounts:
+            - name: file-volume
+              mountPath: /data
+      volumes:
+        - name: file-volume
+          configMap:
+            name: {{ include "my-webserver-chart.fullname" . }}-configmap
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "my-webserver-chart.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "my-webserver-chart.name" . }}
+    helm.sh/chart: {{ include "my-webserver-chart.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: {{ include "my-webserver-chart.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}

@@ -1,0 +1,4 @@
+apiVersion: v2
+name: json-to-webpage
+description: A Helm chart to deploy the json-to-webpage server
+version: 0.1.0
