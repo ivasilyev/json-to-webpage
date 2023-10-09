@@ -3,30 +3,32 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
+	"text/template"
 )
 
 const PORT = 12000
 
 func templateRenderer(w http.ResponseWriter, m map[string]string) {
-	funcMap := template.FuncMap{
-		"isUrl": func(value string) bool {
-			fmt.Println(value, strings.HasPrefix(value, "\"http"))
-			return strings.HasPrefix(value, "\"http")
-		},
+	var s = ""
+	for k, v := range m {
+		if strings.HasPrefix(v, "\"http") {
+			s += fmt.Sprintf("<tr><td>%s</td><td><a href=%s>%s</a></td></tr>\n", k, v, v)
+		} else {
+			s += fmt.Sprintf("<tr><td>%s</td><td>%s</td></tr>\n", k, v)
+		}
 	}
 
-	tmpl, err := template.New("index.html").Funcs(funcMap).ParseFiles("./html/index.html")
+	tmpl, err := template.ParseFiles("./html/index.html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = tmpl.Execute(w, m)
+	err = tmpl.Execute(w, s)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -54,18 +56,11 @@ func jsonDataHandler(w http.ResponseWriter, r *http.Request) {
 	for k, v := range jsonRawData {
 		b, _ := json.Marshal(v)
 		var s = string(b)
-		/*
-			if strings.HasPrefix(s, "\"http") {
-				s = fmt.Sprintf("<a href=\"%s\">%s</a>", s, s)
-				fmt.Println("%s, %s", s)
-			}
-		*/
 		jsonStringData[k] = s
 	}
 
 	// Generate HTML table
 	templateRenderer(w, jsonStringData)
-
 }
 
 func main() {
