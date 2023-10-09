@@ -7,16 +7,25 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 )
 
 const PORT = 12000
 
 func templateRenderer(w http.ResponseWriter, m map[string]string) {
-	tmpl, err := template.ParseFiles("./html/index.html")
+	funcMap := template.FuncMap{
+		"isUrl": func(value string) bool {
+			fmt.Println(value, strings.HasPrefix(value, "\"http"))
+			return strings.HasPrefix(value, "\"http")
+		},
+	}
+
+	tmpl, err := template.New("index.html").Funcs(funcMap).ParseFiles("./html/index.html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	err = tmpl.Execute(w, m)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -43,12 +52,15 @@ func jsonDataHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for k, v := range jsonRawData {
-		o, _ := json.Marshal(v)
-		jsonStringData[k] = string(o)
-	}
-
-	for k, v := range jsonStringData {
-		fmt.Println("%s, %s", k, v)
+		b, _ := json.Marshal(v)
+		var s = string(b)
+		/*
+			if strings.HasPrefix(s, "\"http") {
+				s = fmt.Sprintf("<a href=\"%s\">%s</a>", s, s)
+				fmt.Println("%s, %s", s)
+			}
+		*/
+		jsonStringData[k] = s
 	}
 
 	// Generate HTML table
