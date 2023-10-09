@@ -1,0 +1,8 @@
+{
+  "key1": 1,
+  "key4": "1",
+  "key5": "http://google.com",
+  "key2": {
+    "key3": 3
+  }
+}
