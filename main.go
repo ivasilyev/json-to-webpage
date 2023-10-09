@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -11,6 +12,8 @@ import (
 )
 
 const PORT = 12000
+
+var filePath string
 
 func templateRenderer(w http.ResponseWriter, m map[string]string) {
 	var s = ""
@@ -37,10 +40,9 @@ func templateRenderer(w http.ResponseWriter, m map[string]string) {
 
 func jsonDataHandler(w http.ResponseWriter, r *http.Request) {
 	// Read the JSON file from disk
-	filePath := "./data.json"
 	fileData, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		http.Error(w, "Failed to read JSON file", http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to read JSON file: '%s'", filePath), http.StatusInternalServerError)
 		return
 	}
 
@@ -64,6 +66,10 @@ func jsonDataHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	var j = flag.String("j", "./test/data.json", "JSON file")
+	flag.Parse()
+	filePath = *j
+
 	http.HandleFunc("/", jsonDataHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
