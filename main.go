@@ -11,8 +11,7 @@ import (
 	"text/template"
 )
 
-const PORT = 12000
-
+var serverPort uint64
 var filePath string
 
 func templateRenderer(w http.ResponseWriter, m map[string]string) {
@@ -67,8 +66,10 @@ func jsonDataHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	var j = flag.String("j", "./test/data.json", "JSON file")
+	var p = flag.Uint64("p", 12000, "Server port")
 	flag.Parse()
 	filePath = *j
+	serverPort = *p
 
 	http.HandleFunc("/", jsonDataHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
@@ -76,6 +77,6 @@ func main() {
 	http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("./css"))))
 	http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("./js"))))
 
-	log.Println(fmt.Sprintf("Server started on http://localhost:%d", PORT))
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(": %d", PORT), nil))
+	log.Println(fmt.Sprintf("Server started on http://localhost:%d", serverPort))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(": %d", serverPort), nil))
 }
