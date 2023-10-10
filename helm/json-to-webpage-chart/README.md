@@ -18,7 +18,7 @@ git pull
 rm -f *.tgz
 export CHART="$(helm package "${CHART_NAME}" | awk '{print $NF}')"
 echo "Install '${CHART}'"
-helm install "mysql-chinook" "${CHART}"
+helm install "${CHART_NAME}" "${CHART}"
 
 kubectl get pods
 kubectl get services

@@ -1,55 +1,32 @@
-# deployment.yaml
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "my-webserver-chart.fullname" . }}
+  name: {{ .Chart.name }}-service
   labels:
-    app.kubernetes.io/name: {{ include "my-webserver-chart.name" . }}
-    helm.sh/chart: {{ include "my-webserver-chart.chart" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app: {{ .Chart.name }}
+    version: {{ .Chart.version }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .values.replicaCount }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "my-webserver-chart.name" . }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
+      app: {{ .Chart.Name }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ include "my-webserver-chart.name" . }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
+        app: {{ .Chart.Name }}
     spec:
       containers:
-        - name: {{ .Chart.Name }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        - name: {{ .Chart.name }}-dc
+          image: {{ .values.dockerImage }}
           ports:
             - name: http
-              containerPort: {{ .Values.port }}
+              containerPort: {{ .values.portInternal }}
           volumeMounts:
             - name: file-volume
               mountPath: /data
       volumes:
         - name: file-volume
           configMap:
-            name: {{ include "my-webserver-chart.fullname" . }}-configmap
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ include "my-webserver-chart.fullname" . }}
-  labels:
-    app.kubernetes.io/name: {{ include "my-webserver-chart.name" . }}
-    helm.sh/chart: {{ include "my-webserver-chart.chart" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-spec:
-  type: LoadBalancer
-  ports:
-    - port: 80
-      targetPort: http
-      protocol: TCP
-      name: http
-  selector:
-    app.kubernetes.io/name: {{ include "my-webserver-chart.name" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
+            defaultMode: 0700
+            name: {{ .Chart.name }}-cm

@@ -1,0 +1,6 @@
+---
+replicaCount: 1
+dockerImage: "debian:stretch-slim"
+portInternal: 12000
+portExternal: 32000
+serverProtocol: TCP
