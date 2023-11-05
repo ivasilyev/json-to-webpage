@@ -37,10 +37,20 @@ func templateRenderer(w http.ResponseWriter, m map[string]string) {
 	}
 }
 
-func jsonDataHandler(w http.ResponseWriter, r *http.Request) {
+func readJson(w http.ResponseWriter) []byte {
 	// Read the JSON file from disk
 	fileData, err := ioutil.ReadFile(filePath)
 	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to read JSON file: '%s'", filePath), http.StatusInternalServerError)
+		return nil
+	}
+	return fileData
+}
+
+func jsonDataHandler(w http.ResponseWriter, r *http.Request) {
+	var fileData = readJson(w)
+
+	if fileData == nil {
 		http.Error(w, fmt.Sprintf("Failed to read JSON file: '%s'", filePath), http.StatusInternalServerError)
 		return
 	}
@@ -49,9 +59,10 @@ func jsonDataHandler(w http.ResponseWriter, r *http.Request) {
 	jsonRawData := make(map[string]json.RawMessage)
 	jsonStringData := make(map[string]string)
 
-	err = json.Unmarshal(fileData, &jsonRawData)
+	err := json.Unmarshal(fileData, &jsonRawData)
 	if err != nil {
-		panic(err)
+		http.Error(w, fmt.Sprintf("Failed to parse JSON file: '%s'", filePath), http.StatusInternalServerError)
+		return
 	}
 
 	for k, v := range jsonRawData {
@@ -59,9 +70,18 @@ func jsonDataHandler(w http.ResponseWriter, r *http.Request) {
 		var s = string(b)
 		jsonStringData[k] = s
 	}
-
 	// Generate HTML table
 	templateRenderer(w, jsonStringData)
+}
+
+func jsonDataExporter(w http.ResponseWriter, r *http.Request) {
+	var fileData = readJson(w)
+
+	w.Header().Set("Content-Type", "application/json")
+	_, err := w.Write(fileData)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to read JSON file: '%s'", filePath), http.StatusInternalServerError)
+	}
 }
 
 func main() {
@@ -72,6 +92,7 @@ func main() {
 	serverPort = *p
 
 	http.HandleFunc("/", jsonDataHandler)
+	http.HandleFunc("/json", jsonDataExporter)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("./css"))))
